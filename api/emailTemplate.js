@@ -33,7 +33,7 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
       
     <div style="text-align: left; font-size: 13px; margin-bottom: 15px; font-family: Arial, sans-serif;">
       <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding-bottom: 5px; color: #4b5563;">Mã đơn:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${orderId || '___'}</td></tr>
+        ${orderId ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Mã đơn:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${orderId}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Bàn:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${tableName || 'Mua mang đi'}</td></tr>
         ${customerName ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Khách hàng:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${customerName}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Thu ngân:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${employeeName || 'Nhân viên'}</td></tr>
@@ -72,6 +72,7 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
       <p style="font-size: 12px; font-weight: bold; margin-top: 5px; font-style: italic; color: #1f2937;">Cảm ơn quý khách & Hẹn gặp lại!</p>
       <p style="font-size: 10px; margin-top: 5px; color: #6b7280;">Hệ thống quản lý SaaS Staff &copy; HieuPham</p>
     </div>
+    <span style="display: none !important; opacity: 0; color: transparent;">${Date.now()}</span>
   </div>
 </body>
 </html>`;

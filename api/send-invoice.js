@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       from: `${storeNameStr} <invoice@staff.id.vn>`,
       to: customerEmail,
       replyTo: replyToEmail,
-      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán #${orderId || ''}`,
+      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán ${orderId ? `#${orderId}` : ''} - ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       html: htmlContent,
     });
 
