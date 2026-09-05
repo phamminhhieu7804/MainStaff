@@ -29,15 +29,13 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
       
     <div style="border-top: 1px dashed #9ca3af; margin: 15px 0;"></div>
       
-    <h4 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: center; font-family: Arial, sans-serif;">Hóa Đơn Điện Tử</h4>
+    <h4 style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: center; font-family: Arial, sans-serif;">Hóa Đơn Thanh Toán</h4>
       
     <div style="text-align: left; font-size: 13px; margin-bottom: 15px; font-family: Arial, sans-serif;">
       <table style="width: 100%; border-collapse: collapse;">
-        ${orderId ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Mã đơn:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${orderId}</td></tr>` : ''}
+        ${orderId ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Số phiếu:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${orderId}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Bàn:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${tableName || 'Mua mang đi'}</td></tr>
-        ${customerName ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Khách hàng:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${customerName}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Thu ngân:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${employeeName || 'Nhân viên'}</td></tr>
-        ${paymentMethod ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Thanh toán:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Thời gian:</td><td style="text-align: right; padding-bottom: 5px; color: #1f2937;">${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</td></tr>
       </table>
     </div>
@@ -47,9 +45,9 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
     <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
       <thead>
         <tr>
-          <th style="border-bottom: 1px solid #d1d5db; padding-bottom: 8px; color: #111827; text-align: left; font-size: 12px;">Tên món</th>
-          <th style="border-bottom: 1px solid #d1d5db; padding-bottom: 8px; text-align: center; width: 40px; color: #111827; font-size: 12px;">SL</th>
-          <th style="border-bottom: 1px solid #d1d5db; padding-bottom: 8px; text-align: right; width: 90px; color: #111827; font-size: 12px;">T.Tiền</th>
+          <th style="padding-bottom: 8px; color: #111827; text-align: left; font-size: 12px; border-bottom: 1px solid #d1d5db;">Tên món</th>
+          <th style="padding-bottom: 8px; text-align: center; width: 40px; color: #111827; font-size: 12px; border-bottom: 1px solid #d1d5db;">SL</th>
+          <th style="padding-bottom: 8px; text-align: right; width: 90px; color: #111827; font-size: 12px; border-bottom: 1px solid #d1d5db;">T.Tiền</th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +60,7 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
     <table style="width: 100%; border-collapse: collapse; font-size: 16px; color: #111827; font-family: Arial, sans-serif;">
       <tr>
         <td style="font-weight: bold;">TỔNG CỘNG:</td>
-        <td style="text-align: right; font-weight: bold;">${(totalAmount || 0).toLocaleString('vi-VN')}đ</td>
+        <td style="text-align: right; font-weight: bold;">${(totalAmount || 0).toLocaleString('vi-VN')} đ</td>
       </tr>
     </table>
       
@@ -72,6 +70,7 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
       <p style="font-size: 12px; font-weight: bold; margin-top: 5px; font-style: italic; color: #1f2937;">Cảm ơn quý khách & Hẹn gặp lại!</p>
       <p style="font-size: 10px; margin-top: 5px; color: #6b7280;">Hệ thống quản lý SaaS Staff &copy; HieuPham</p>
     </div>
+    
     <span style="display: none !important; opacity: 0; color: transparent;">${Date.now()}</span>
   </div>
 </body>
