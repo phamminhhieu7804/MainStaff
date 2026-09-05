@@ -38,7 +38,7 @@ export function generateInvoiceHtml({ orderId, tableName, customerName, items, t
         ${customerName ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Khách hàng:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${customerName}</td></tr>` : ''}
         <tr><td style="padding-bottom: 5px; color: #4b5563;">Thu ngân:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${employeeName || 'Nhân viên'}</td></tr>
         ${paymentMethod ? `<tr><td style="padding-bottom: 5px; color: #4b5563;">Thanh toán:</td><td style="text-align: right; font-weight: bold; padding-bottom: 5px; color: #1f2937;">${paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</td></tr>` : ''}
-        <tr><td style="padding-bottom: 5px; color: #4b5563;">Thời gian:</td><td style="text-align: right; padding-bottom: 5px; color: #1f2937;">${new Date().toLocaleString('vi-VN')}</td></tr>
+        <tr><td style="padding-bottom: 5px; color: #4b5563;">Thời gian:</td><td style="text-align: right; padding-bottom: 5px; color: #1f2937;">${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</td></tr>
       </table>
     </div>
       
