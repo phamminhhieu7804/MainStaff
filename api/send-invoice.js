@@ -33,7 +33,8 @@ export default async function handler(req, res) {
       totalAmount, 
       paymentMethod, 
       tableName, 
-      storeInfo 
+      storeInfo,
+      employeeName
     } = req.body;
 
     if (!customerEmail) {
@@ -47,7 +48,8 @@ export default async function handler(req, res) {
       items, 
       totalAmount, 
       paymentMethod, 
-      storeInfo 
+      storeInfo,
+      employeeName
     });
 
     const storeNameStr = storeInfo?.storeName || storeInfo?.invoiceStoreName || storeInfo?.name || 'Hóa đơn';
