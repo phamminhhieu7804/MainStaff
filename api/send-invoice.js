@@ -1,21 +1,32 @@
-import { Resend } from 'resend';
 import { generateInvoiceHtml } from './emailTemplate.js';
+import nodemailer from 'nodemailer';
+import admin from 'firebase-admin';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+if (!admin.apps.length) {
+  try {
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (serviceAccountJson) {
+      admin.initializeApp({
+        credential: admin.credential.cert(JSON.parse(serviceAccountJson))
+      });
+    } else {
+      console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not set. Using default credentials if available.");
+      admin.initializeApp();
+    }
+  } catch (error) {
+    console.error('Firebase admin init error', error);
+  }
+}
 
-// CORS middleware
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+const db = admin.firestore();
+
+export default async function handler(req, res) {
+  // CORS setup
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-}
 
-export default async function handler(req, res) {
-  // Set CORS headers first
-  setCorsHeaders(res);
-
-  // Handle preflight request immediately
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -26,6 +37,7 @@ export default async function handler(req, res) {
 
   try {
     const { 
+      storeId,
       customerEmail, 
       customerName, 
       orderId, 
@@ -33,13 +45,44 @@ export default async function handler(req, res) {
       totalAmount, 
       paymentMethod, 
       tableName, 
-      storeInfo,
       employeeName
     } = req.body;
 
     if (!customerEmail) {
       return res.status(400).json({ error: 'Email is required' });
     }
+
+    let smtpUser = null;
+    let smtpPassword = null;
+    let fetchedStoreInfo = {};
+
+    if (storeId) {
+      const emailConfigSnap = await db.doc(`stores/${storeId}/private_settings/emailConfig`).get();
+      if (emailConfigSnap.exists) {
+        const configData = emailConfigSnap.data();
+        smtpUser = configData.smtpUser;
+        smtpPassword = configData.smtpPassword;
+      }
+
+      const storeSettingsSnap = await db.doc(`store_settings/${storeId}`).get();
+      if (storeSettingsSnap.exists) {
+        fetchedStoreInfo = storeSettingsSnap.data();
+      }
+    }
+
+    if (!smtpUser || !smtpPassword) {
+      return res.status(400).json({ error: 'Chưa cấu hình Mật khẩu ứng dụng Gmail cho quán này.' });
+    }
+
+    const cleanSmtpPassword = smtpPassword.replace(/\s+/g, '');
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: smtpUser,
+        pass: cleanSmtpPassword
+      }
+    });
 
     const htmlContent = generateInvoiceHtml({ 
       orderId, 
@@ -48,29 +91,26 @@ export default async function handler(req, res) {
       items, 
       totalAmount, 
       paymentMethod, 
-      storeInfo,
+      storeInfo: fetchedStoreInfo,
       employeeName
     });
 
-    const storeNameStr = storeInfo?.storeName || storeInfo?.invoiceStoreName || storeInfo?.name || 'Hóa đơn';
-    const replyToEmail = storeInfo?.invoiceEmail || storeInfo?.email || 'invoice@staff.id.vn';
-
-    const { data, error } = await resend.emails.send({
-      from: `${storeNameStr} <invoice@staff.id.vn>`,
+    const storeNameStr = fetchedStoreInfo?.invoiceStoreName || fetchedStoreInfo?.storeName || fetchedStoreInfo?.name || 'Hóa đơn';
+    
+    await transporter.sendMail({
+      from: `"${storeNameStr}" <${smtpUser}>`,
       to: customerEmail,
-      replyTo: replyToEmail,
-      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán ${orderId ? `#${orderId}` : ''} - ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
-      html: htmlContent,
+      replyTo: fetchedStoreInfo?.invoiceEmail || fetchedStoreInfo?.email,
+      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán ${orderId ? \`#\${orderId}\` : ''} - ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+      html: htmlContent
     });
 
-    if (error) {
-      console.error('Resend error:', error);
-      return res.status(400).json({ error: error.message || JSON.stringify(error) });
-    }
-
-    return res.status(200).json({ success: true, data });
+    return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('API error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Email sending error:', error);
+    if (error.code === 'EAUTH' || error.message?.includes('EAUTH')) {
+      return res.status(401).json({ error: 'Mật khẩu ứng dụng Gmail sai hoặc hết hạn. Vui lòng kiểm tra lại cấu hình.' });
+    }
+    return res.status(500).json({ error: error.message || 'Error sending email' });
   }
 }
