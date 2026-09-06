@@ -2,23 +2,30 @@ import { generateInvoiceHtml } from './emailTemplate.js';
 import nodemailer from 'nodemailer';
 import admin from 'firebase-admin';
 
-if (!admin.apps.length) {
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+if (!getApps().length) {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (serviceAccountJson) {
-      admin.initializeApp({
-        credential: admin.credential.cert(JSON.parse(serviceAccountJson))
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
+      initializeApp({
+        credential: cert(serviceAccount)
       });
     } else {
       console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not set. Using default credentials if available.");
-      admin.initializeApp();
+      initializeApp();
     }
   } catch (error) {
     console.error('Firebase admin init error', error);
   }
 }
 
-const db = admin.firestore();
+const db = getFirestore();
 
 export default async function handler(req, res) {
   // CORS setup
@@ -36,15 +43,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { 
+    const {
       storeId,
-      customerEmail, 
-      customerName, 
-      orderId, 
-      items, 
-      totalAmount, 
-      paymentMethod, 
-      tableName, 
+      customerEmail,
+      customerName,
+      orderId,
+      items,
+      totalAmount,
+      paymentMethod,
+      tableName,
       employeeName
     } = req.body;
 
@@ -84,24 +91,24 @@ export default async function handler(req, res) {
       }
     });
 
-    const htmlContent = generateInvoiceHtml({ 
-      orderId, 
-      tableName, 
-      customerName, 
-      items, 
-      totalAmount, 
-      paymentMethod, 
+    const htmlContent = generateInvoiceHtml({
+      orderId,
+      tableName,
+      customerName,
+      items,
+      totalAmount,
+      paymentMethod,
       storeInfo: fetchedStoreInfo,
       employeeName
     });
 
     const storeNameStr = fetchedStoreInfo?.invoiceStoreName || fetchedStoreInfo?.storeName || fetchedStoreInfo?.name || 'Hóa đơn';
-    
+
     await transporter.sendMail({
       from: `"${storeNameStr}" <${smtpUser}>`,
       to: customerEmail,
       replyTo: fetchedStoreInfo?.invoiceEmail || fetchedStoreInfo?.email,
-      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán ${orderId ? \`#\${orderId}\` : ''} - ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+      subject: `[${storeNameStr}] Hóa Đơn Thanh Toán ${orderId ? `#${orderId}` : ''} - ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       html: htmlContent
     });
 
